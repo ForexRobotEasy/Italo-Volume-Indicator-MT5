@@ -1,0 +1,81 @@
+
+//+------------------------------------------------------------------+
+//|                                                  Italo Volume Indicator MT5 |
+//|                                       Copyright © 2022, Forex Robot Easy Team |
+//|                                                     https://forexroboteasy.com |
+//+------------------------------------------------------------------+
+#property strict
+
+// Indicator input parameters
+input int period = 14; // Calculation period
+
+// Indicator buffers
+double TrendBuffer[];
+double CandleVolumeBuffer[];
+
+//+------------------------------------------------------------------+
+//| Custom indicator initialization function                         |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Set indicator buffers
+    SetIndexBuffer(0, TrendBuffer, INDICATOR_DATA);
+    SetIndexBuffer(1, CandleVolumeBuffer, INDICATOR_DATA);
+
+    // Set indicator labels
+    IndicatorSetString(INDICATOR_SHORTNAME, 'Italo Volume Indicator MT5');
+
+    // Set indicator properties
+    IndicatorSetInteger(INDICATOR_DIGITS, Digits);
+    IndicatorSetInteger(INDICATOR_HEIGHT, 100);
+
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator deinitialization function                       |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+    // Clean up buffers
+    ArrayInitialize(TrendBuffer, 0);
+    ArrayInitialize(CandleVolumeBuffer, 0);
+}
+
+//+------------------------------------------------------------------+
+//| Custom indicator calculation function                            |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total, const int prev_calculated, const datetime &time[], const double &open[], const double &high[], const double &low[], const double &close[], const long &tick_volume[], const long &volume[], const int &spread[])
+{
+    int limit = rates_total - prev_calculated;
+
+    // Calculate indicator values
+    for (int i = 0; i < limit; i++)
+    {
+        double waveVolume = 0;
+        double candleVolume = 0;
+
+        // Calculate wave volume
+        for (int j = i - period; j <= i; j++)
+        {
+            waveVolume += volume[j];
+        }
+
+        // Calculate candle volume
+        candleVolume = volume[i];
+
+        // Perform trend prediction based on wave volume and candle volume
+        if (waveVolume > candleVolume)
+        {
+            TrendBuffer[i] = 1.0; // Up trend
+        }
+        else
+        {
+            TrendBuffer[i] = -1.0; // Down trend
+        }
+
+        CandleVolumeBuffer[i] = candleVolume;
+    }
+
+    return(rates_total);
+}
